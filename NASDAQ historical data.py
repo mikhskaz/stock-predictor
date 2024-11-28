@@ -3,11 +3,18 @@ import pandas as pd
 import yfinance as yf
 import shutil
 import contextlib
+import time
+
+# Stocks for which we want max historical data
+hist_stocks = {'AAPL', 'NVDA', 'MSFT', 'AMZN', 'GOOG', 'META', 'TSLA'}
+
 
 # Configurations
-offset = 4000
+offset = 0
 limit = 2000
-period = '6mo'  # valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
+default_period = '1d'  # Default period for all stocks
+hist_stock_period = 'max'  # Period for specific stocks
+# valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
 
 # Download all NASDAQ traded symbols
 url = "http://www.nasdaqtrader.com/dynamic/SymDir/nasdaqtraded.txt"
@@ -21,10 +28,17 @@ limit = limit if limit else len(symbols)
 end = min(offset + limit, len(symbols))
 is_valid = [False] * len(symbols)
 
+# Ensure directories exist
+os.makedirs('hist', exist_ok=True)
+
 with open(os.devnull, 'w') as devnull:
     with contextlib.redirect_stdout(devnull):
         for i in range(offset, end):
             symbol = symbols[i]
+
+            # Use 'max' period for specific stocks, '1d' for others
+            period = hist_stock_period if symbol in hist_stocks else default_period
+
             data = yf.download(symbol, period=period)
             if len(data.index) == 0:
                 continue
@@ -44,9 +58,13 @@ stocks = valid_data[valid_data['ETF'] == 'N']['NASDAQ Symbol'].tolist()
 
 
 def move_symbols(symbols, destination):
+    os.makedirs(destination, exist_ok=True)
     for symbol in symbols:
         filename = f"{symbol}.csv"
-        shutil.move(os.path.join('hist', filename), os.path.join(destination, filename))
+        source_path = os.path.join('hist', filename)
+        destination_path = os.path.join(destination, filename)
+        if os.path.exists(source_path):
+            shutil.move(source_path, destination_path)
 
 
 # Move files to respective directories
