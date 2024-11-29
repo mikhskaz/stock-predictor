@@ -1,4 +1,5 @@
 import pandas as pd
+from pmdarima import auto_arima
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 import os
 import warnings
@@ -32,9 +33,12 @@ for stock in hist_stocks:
             print(f"'Close' column not found in {filename}")
             continue
 
-        # Define SARIMA parameters
-        order = (1, 1, 1)  # Non-seasonal ARIMA parameters
-        seasonal_order = (1, 1, 1, 30) #Hyperparameters
+        # Auto-tune SARIMA parameters
+        auto_model = auto_arima(df['Close'], seasonal=True, m=5, d=1, D=1,
+                                trace=False, error_action='ignore', suppress_warnings=True)
+        order = auto_model.order
+        seasonal_order = auto_model.seasonal_order
+        print(f"Best SARIMA order for {stock}: {order}, seasonal_order: {seasonal_order}")
 
         # Fit the SARIMA model
         model = SARIMAX(df['Close'], order=order, seasonal_order=seasonal_order)
