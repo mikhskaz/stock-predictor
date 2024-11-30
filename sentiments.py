@@ -1,5 +1,4 @@
 from config import NEWS_API_KEY
-data_path = 'stock-predictor/data/sentiments.csv'
 
 import requests
 import csv
@@ -9,6 +8,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+
+DEPTH = 132
+ESTIMATORS = 100 # Number of trees in the forest
+STOCK = 'AAPL'
+DATA_PATH = 'stock-predictor/data/sentiments.csv'
 
 vectorizer = TfidfVectorizer()
 
@@ -72,15 +76,8 @@ def train_classifier(X_train: np.ndarray, y_train: np.ndarray, X_val: np.ndarray
     :param y_train: The training labels.
     :return: The trained classifier.
     """
-    if depth is None:
-        max_depths = [int(i) for i in range(100, 150, 2)]
-    else:
-        max_depths = [depth]
-
-    if estimators is None:
-        n_estimators = [int(i) for i in range(100, 300, 100)]
-    else:
-        n_estimators = [estimators]
+    max_depths = [DEPTH] if depth is None else [depth]
+    n_estimators = [ESTIMATORS] if estimators is None else [estimators]
 
     accuracies = []
 
@@ -104,9 +101,8 @@ def train_classifier(X_train: np.ndarray, y_train: np.ndarray, X_val: np.ndarray
     
     print(f'Best accuracy: {best_accuracy} at depth {best_clf.max_depth} at {best_estimator} estimators')
 
-    if depth is None and estimators is None:
-        plt.plot(max_depths, accuracies[:len(max_depths)], label='100 estimators')
-        plt.plot(max_depths, accuracies[len(max_depths):], label='200 estimators')
+    if depth is None and estimators is None: # Plot the graph if needed
+        plt.plot(max_depths, accuracies, label='100 estimators')
         plt.xlabel('Max Depth')
         plt.ylabel('Accuracy')
         plt.title('Accuracy vs. Max Depth')
@@ -116,19 +112,30 @@ def train_classifier(X_train: np.ndarray, y_train: np.ndarray, X_val: np.ndarray
     
 
 if __name__ == '__main__':
-    X_train, y_train, X_val, y_val, X_test, y_test = load_data(data_path)
-    # Best rn, 132/100 0.76
+    X_train, y_train, X_val, y_val, X_test, y_test = load_data(DATA_PATH)
+    # depth_list = list(range(1, 200))
+
     clf = train_classifier(X_train, y_train, X_val, y_val, estimators=100)
-    print(clf.score(X_val, y_val))
 
-    print(clf.score(X_test, y_test))
+    print("Validation score:", clf.score(X_val, y_val))
+
+    print("Test score:", clf.score(X_test, y_test))
 
 
-    news = get_news('AAPL', NEWS_API_KEY, count=1)
+    news = get_news(STOCK, NEWS_API_KEY, count=100)
+
+    sentiments = ['negative', 'neutral', 'positive']
+    sentiments_probabilities = []
 
     for article in news:
-        print(article['title'])
-        print(clf.predict(vectorizer.transform([article['title']])))
-        print(clf.predict_proba(vectorizer.transform([article['title']])))
+        sentiments_probabilities.append(clf.predict_proba(vectorizer.transform([clean_article(article['content'])]))[0])
+    
+    thoughts = np.mean(sentiments_probabilities, axis=0)
+    print(f"Thoughts on {STOCK}:")
+    # print(f"Positive: {thoughts[0]}")
+    # print(f"Negative: {thoughts[1]}")
+    # print(f"Neutral: {thoughts[2]}")
+    second_most_sentiment_index = np.argsort(thoughts)[-2]
+    print(f"Overall Sentiment: {sentiments[np.argmax(thoughts)]} {sentiments[second_most_sentiment_index]} at {round(((thoughts[np.argmax(thoughts)] + thoughts[second_most_sentiment_index])) * 100, 1)}% confidence")
 
     
