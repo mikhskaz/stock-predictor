@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 warnings.filterwarnings("ignore")
 
 # List of stock tickers
-hist_stocks = {'AAPL', 'NVDA', 'MSFT', 'AMZN', 'GOOG', 'META', 'TSLA'}
+hist_stocks = {'MSFT', 'NVDA', 'AAPL', 'AMZN', 'GOOG', 'META', 'TSLA'}
 
 # Create the output directory if it doesn't exist
 output_dir = 'sarima_results'
@@ -34,7 +34,7 @@ for stock in hist_stocks:
             continue
 
         # Auto-tune SARIMA parameters
-        auto_model = auto_arima(df['Close'], seasonal=True, m=5, d=1, D=1,
+        auto_model = auto_arima(df['Close'], seasonal=True, m=15, d=1, D=1,
                                 trace=False, error_action='ignore', suppress_warnings=True)
         order = auto_model.order
         seasonal_order = auto_model.seasonal_order
