@@ -22,7 +22,7 @@ forecast_days = 90
 for stock in hist_stocks:
     try:
         # Read the CSV file
-        filename = f'cleaned_{stock}.csv'
+        filename = f'Cleaned_csvs/cleaned_{stock}.csv'
         df = pd.read_csv(filename, parse_dates=['Date'], index_col='Date')
         
         # Ensure the data is sorted by date

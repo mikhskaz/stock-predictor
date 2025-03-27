@@ -3,7 +3,7 @@ import csv
 
 # Directory containing the CSV files
 input_dir = "hist"
-output_file = "combined_last_lines.csv"
+output_file = "Cleaned_csvs/combined_last_lines.csv"
 
 # Initialize a list to store the last rows
 last_rows = []

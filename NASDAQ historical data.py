@@ -10,8 +10,8 @@ hist_stocks = {'AAPL', 'NVDA', 'MSFT', 'AMZN', 'GOOG', 'META', 'TSLA'}
 
 
 # Configurations
-offset = 0
-limit = 2000
+offset = 0 #allows the collection to start at different point in alphanuemerical order
+limit = 2000 #amount of stocks you wish to collect
 default_period = '1d'  # Default period for all stocks
 hist_stock_period = 'max'  # Period for specific stocks
 # valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
@@ -56,7 +56,7 @@ valid_data.to_csv('symbols_valid_meta.csv', index=False)
 etfs = valid_data[valid_data['ETF'] == 'Y']['NASDAQ Symbol'].tolist()
 stocks = valid_data[valid_data['ETF'] == 'N']['NASDAQ Symbol'].tolist()
 
-
+#Optionally seperate the stocks into ETF or regular stocks
 def move_symbols(symbols, destination):
     os.makedirs(destination, exist_ok=True)
     for symbol in symbols:
